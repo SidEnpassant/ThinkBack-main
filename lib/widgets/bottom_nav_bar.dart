@@ -1,51 +1,87 @@
 import 'package:flutter/material.dart';
 
 class BottomNavBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onItemTapped;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
   const BottomNavBar({
     super.key,
-    required this.selectedIndex,
-    required this.onItemTapped,
+    required this.currentIndex,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildNavItem(Icons.home, 'Home', 0),
+          _buildNavItem(Icons.search, 'Recall', 1),
+          _buildNavItem(Icons.all_inbox, 'Future', 2),
+          // _buildNavItem(Icons.timeline, 'Timeline', 3),
+          _buildNavItem(Icons.person, 'Profile', 3),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final bool isSelected = currentIndex == index;
+    return InkWell(
+      onTap: () => onTap(index),
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color:
+              isSelected
+                  ? Colors.blueAccent.withOpacity(0.1)
+                  : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search_outlined),
-          activeIcon: Icon(Icons.search),
-          label: 'Recall',
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? Colors.blueAccent : Colors.grey[600],
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              child:
+                  isSelected
+                      ? Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                      : const SizedBox.shrink(),
+            ),
+          ],
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.timeline_outlined),
-          activeIcon: Icon(Icons.timeline),
-          label: 'Timeline',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.send_outlined),
-          activeIcon: Icon(Icons.send),
-          label: 'Future',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Me',
-        ),
-      ],
-      currentIndex: selectedIndex,
-      onTap: onItemTapped,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.blueAccent,
-      unselectedItemColor: Colors.grey[600],
-      showUnselectedLabels: true,
+      ),
     );
   }
 }

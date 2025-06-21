@@ -7,10 +7,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // For demonstration, using static values. Replace with provider values as needed.
-    final String accountName = 'Siddhes';
-    final String email = 'siddhes@email.com';
-    final theme = Theme.of(context);
+    final provider = Provider.of<ProfileProvider>(context);
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -30,20 +27,23 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         children: [
           const SizedBox(height: 8),
-          _ProfileCard(name: accountName, email: email),
+          _ProfileCard(
+            name: provider.userName ?? 'User',
+            email: provider.userEmail ?? 'user@email.com',
+          ),
           const SizedBox(height: 24),
           _buildSectionHeader(context, 'Account'),
           _SettingsTile(
             icon: Icons.security,
             title: 'Privacy Vault',
             subtitle: 'Manage passcode and biometrics',
-            onTap: () {},
+            onTap: null,
           ),
           _SettingsTile(
             icon: Icons.backup,
             title: 'Backup & Export',
             subtitle: 'Export your memories as PDF or Audio',
-            onTap: () {},
+            onTap: null,
           ),
           const Divider(height: 32),
           _buildSectionHeader(context, 'Appearance'),
@@ -51,7 +51,7 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.color_lens,
             title: 'Themes',
             subtitle: 'Dark, Forest, Zen, Nebula',
-            onTap: () {},
+            onTap: null,
           ),
           const Divider(height: 32),
           _buildSectionHeader(context, 'Notifications'),
@@ -59,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.notifications,
             title: 'Notification Settings',
             subtitle: 'Memory nudges and throwbacks',
-            onTap: () {},
+            onTap: null,
           ),
           const SizedBox(height: 32),
           // Sign Out Button
@@ -168,7 +168,7 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _SettingsTile({
     required this.icon,
     required this.title,
@@ -178,23 +178,38 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isEnabled = onTap != null;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 0,
-      color: Colors.white,
+      color: isEnabled ? Colors.white : Colors.grey.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent, size: 28),
+        leading: Icon(
+          icon,
+          color: isEnabled ? Colors.blueAccent : Colors.grey,
+          size: 28,
+        ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 16,
+            color: isEnabled ? Colors.black87 : Colors.grey,
+          ),
         ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey,
+        subtitle: Text(
+          isEnabled ? subtitle : 'Coming soon',
+          style: TextStyle(color: isEnabled ? Colors.grey[600] : Colors.grey),
         ),
+        trailing:
+            isEnabled
+                ? const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                )
+                : null,
         onTap: onTap,
       ),
     );

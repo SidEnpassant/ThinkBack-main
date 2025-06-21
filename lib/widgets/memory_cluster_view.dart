@@ -4,7 +4,7 @@ import '../models/memory_model.dart';
 
 class MemoryClusterView extends StatelessWidget {
   final String clusterTitle;
-  final List<Memory> memories;
+  final List<dynamic> memories; // Accepts Memory or MemoryModel
 
   const MemoryClusterView({
     super.key,

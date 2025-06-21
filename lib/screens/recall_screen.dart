@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:thinkback4/widgets/memory_cluster_view.dart';
 import '../providers/recall_provider.dart';
 import '../widgets/filter_chip_widget.dart';
+import '../widgets/memory_card.dart';
 
 class RecallScreen extends StatelessWidget {
   const RecallScreen({super.key});
@@ -19,8 +20,7 @@ class _RecallScreenBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<RecallProvider>(context);
-    final memoryClusters = provider.memoryClusters;
-    final clusterKeys = memoryClusters.keys.toList();
+    final memories = provider.filteredMemories;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recall & Search')),
@@ -45,11 +45,13 @@ class _RecallScreenBody extends StatelessWidget {
           const FilterChipWidget(),
           Expanded(
             child: ListView.builder(
-              itemCount: clusterKeys.length,
+              itemCount: memories.length,
               itemBuilder: (context, index) {
-                final key = clusterKeys[index];
-                final memories = memoryClusters[key]!;
-                return MemoryClusterView(clusterTitle: key, memories: memories);
+                final memory = memories[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: MemoryCard(memory: memory),
+                );
               },
             ),
           ),

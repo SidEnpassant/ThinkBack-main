@@ -26,6 +26,8 @@ class MemoryEntryProvider extends ChangeNotifier {
   String dreamWho = '';
   String dreamFeel = '';
 
+  String location = '';
+
   void startRecording() {
     isRecording = true;
     isPaused = false;
@@ -91,6 +93,11 @@ class MemoryEntryProvider extends ChangeNotifier {
 
   void setDreamFeel(String value) {
     dreamFeel = value;
+    notifyListeners();
+  }
+
+  void setLocation(String value) {
+    location = value;
     notifyListeners();
   }
 }

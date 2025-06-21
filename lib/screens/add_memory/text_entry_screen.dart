@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/memory_entry_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../../services/memory_service.dart';
+import '../navigation_container.dart';
 
 class TextEntryScreen extends StatelessWidget {
   const TextEntryScreen({super.key});
@@ -22,22 +26,47 @@ class _TextEntryBody extends StatefulWidget {
 }
 
 class _TextEntryBodyState extends State<_TextEntryBody> {
-  late TextEditingController _controller;
+  late TextEditingController _descController;
+  late TextEditingController _titleController;
+  late TextEditingController _locationController;
+  File? _selectedImage;
+  bool _isUploading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     final provider = Provider.of<MemoryEntryProvider>(context, listen: false);
-    _controller = TextEditingController(text: provider.textEntry);
-    _controller.addListener(() {
-      provider.setTextEntry(_controller.text);
+    _descController = TextEditingController(text: provider.textEntry);
+    _descController.addListener(() {
+      provider.setTextEntry(_descController.text);
+    });
+    _titleController = TextEditingController(text: provider.title);
+    _titleController.addListener(() {
+      provider.setTitle(_titleController.text);
+    });
+    _locationController = TextEditingController(text: provider.location);
+    _locationController.addListener(() {
+      provider.setLocation(_locationController.text);
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _descController.dispose();
+    _titleController.dispose();
+    _locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+    }
   }
 
   @override
@@ -60,42 +89,123 @@ class _TextEntryBodyState extends State<_TextEntryBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            // AI Suggestions
-            SizedBox(
-              height: 38,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children:
-                    provider.aiSuggestions
-                        .map(
-                          (s) => Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ActionChip(
-                              label: Text(s),
-                              onPressed: () {
-                                _controller.text = s;
-                              },
-                            ),
-                          ),
-                        )
-                        .toList(),
+            // Title Field
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
-            const SizedBox(height: 24),
-            // Text Field
+            const SizedBox(height: 16),
+            // Location Field
+            TextField(
+              controller: _locationController,
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Description Field
             Expanded(
               child: TextField(
                 maxLines: null,
                 expands: true,
                 decoration: const InputDecoration(
-                  labelText: 'Write your memory...',
+                  labelText: 'Description',
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: Colors.white,
                   floatingLabelBehavior: FloatingLabelBehavior.auto,
                 ),
                 style: const TextStyle(fontSize: 18),
-                controller: _controller,
+                controller: _descController,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Image Picker
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.image),
+                  label: const Text('Attach Image'),
+                ),
+                const SizedBox(width: 12),
+                if (_selectedImage != null)
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed:
+                    (_isUploading ||
+                            _titleController.text.isEmpty ||
+                            _descController.text.isEmpty ||
+                            _locationController.text.isEmpty)
+                        ? null
+                        : () async {
+                          setState(() {
+                            _isUploading = true;
+                            _errorMessage = null;
+                          });
+                          try {
+                            await MemoryService().uploadTextMemory(
+                              title: _titleController.text,
+                              description: _descController.text,
+                              location: _locationController.text,
+                              imageFile: _selectedImage,
+                            );
+                            if (!mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (_) => NavigationContainer(),
+                              ),
+                              (route) => false,
+                            );
+                          } catch (e) {
+                            setState(() {
+                              _errorMessage = e.toString().replaceFirst(
+                                'Exception: ',
+                                '',
+                              );
+                            });
+                          } finally {
+                            setState(() {
+                              _isUploading = false;
+                            });
+                          }
+                        },
+                child:
+                    _isUploading
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Upload'),
               ),
             ),
           ],

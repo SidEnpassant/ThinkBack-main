@@ -43,14 +43,19 @@ class _FutureScreenBody extends StatelessWidget {
           return FutureJarCard(jar: jar, daysLeft: daysLeft);
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const AddFutureJarScreen()),
-          );
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AddFutureJarScreen(),
+              ),
+            );
+          },
+          backgroundColor: Colors.blueAccent,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

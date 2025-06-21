@@ -1,34 +1,45 @@
 import 'package:flutter/material.dart';
 import '../models/future_jar_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FutureJarProvider with ChangeNotifier {
-  final List<FutureJar> _jars = [
-    FutureJar(
-      id: '1',
-      title: 'For my 30th Birthday',
-      message:
-          'Hope you are happy and fulfilled, and that you have traveled to at least 10 new countries. Remember the goals you set on your 25th birthday!',
-      unlockDate: DateTime.now().add(const Duration(days: 1024)),
-      category: 'Personal Growth',
-    ),
-    FutureJar(
-      id: '2',
-      title: 'Wedding Day Advice',
-      message:
-          'Don\'t forget to just enjoy the moment. Take a deep breath, look around, and soak it all in. This day is for you two.',
-      unlockDate: DateTime.now().add(const Duration(days: 456)),
-      category: 'For your wedding day',
-    ),
-    FutureJar(
-      id: '3',
-      title: 'If you feel like quitting your job',
-      message:
-          'Remember why you started this career path. Is the reason you want to quit a temporary frustration or a fundamental misalignment with your values? Take a week to think before you decide.',
-      unlockDate: DateTime.now().add(const Duration(days: 90)),
-    ),
-  ];
+  List<FutureJar> _jars = [];
+  bool isLoading = false;
+  String? errorMessage;
+
+  FutureJarProvider() {
+    fetchJars();
+  }
 
   List<FutureJar> get jars => _jars;
+
+  Future<void> fetchJars() async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception('No auth token found');
+      final response = await http.get(
+        Uri.parse('https://thinkbackbackend.onrender.com/api/locked-in'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> jarsJson = data['data'];
+        _jars = jarsJson.map((json) => FutureJar.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch future jars: ' + response.body);
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+    }
+    isLoading = false;
+    notifyListeners();
+  }
 
   void addJar(FutureJar jar) {
     _jars.add(jar);

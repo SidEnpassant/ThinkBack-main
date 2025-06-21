@@ -48,7 +48,10 @@ class LoginProvider with ChangeNotifier {
       user = response.user;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token!);
-      await prefs.setString('user', user != null ? user.toString() : '');
+      if (user != null) {
+        await prefs.setString('userName', user!['name'] ?? '');
+        await prefs.setString('userEmail', user!['email'] ?? '');
+      }
       errorMessage = null;
       debugPrint('Login successful. Token: $token');
     } catch (e) {
